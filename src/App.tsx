@@ -2,7 +2,8 @@ import { useState } from 'react'
 import styled from 'styled-components'
 import {DragDropContext, Draggable, Droppable} from "react-beautiful-dnd"
 import { nanoid } from 'nanoid';
-import { FaTrash } from 'react-icons/fa';
+import { FaTrash, FaEdit } from 'react-icons/fa';
+
 
 
 const Container = styled.div`
@@ -26,17 +27,13 @@ const Input  = styled.input`
 
 `;
 const Button = styled.div`
-display: inline-block;
-padding: 15px 25px;
+padding: 8px 16px;
 font-size: 16px;
 cursor: pointer;
-text-align: center;
-text-decoration: none;
-outline: none;
 color: #fff;
 background-color: black;
 border: none;
-border-radius: 15px;
+border-radius: 4px;
 box-shadow: 0 9px #999;
 
 &:hover {
@@ -75,14 +72,34 @@ const Listbox = styled.div`
  background-color: white;
  border : 1px solid;
  
-
-
- 
 `;
 
-const DeleteContainer = styled.div`
+const ModalBackground = styled.div`
+position:fixed;
+top:0;
+left:0;
+right:0;
+bottom:0;
+align-item:center;
+justify-content:center;
+
+
+
+`;
+const ModalContainer = styled.div`
+padding: 20px;
+border-radius:8px;
+display:flex;
+align-item:center;
+gap:10px;
+`;
+
+const EditDeleteContainer = styled.div`
  display: flex;
-`
+ gap:10px;
+`;
+
+
 
 interface ItemsProps {
   id: string;
@@ -95,6 +112,10 @@ function App() {
 
   const [items, setItems] = useState<ItemsProps[]>([])
   const [newItemContent, setNewItemContent] = useState<string>("")
+
+  const [open,setOpen] = useState<boolean>(false)
+  const [inputEdit,setInputEdit] = useState<string>("")
+  const [selectedId, setSelectedId] = useState<string>("")
 
   const onDragEnd = (result: any) => {
     if (!result.destination) return;
@@ -120,6 +141,21 @@ function App() {
     setItems((items)=> {
       return items.filter((item)=> item.id !== id)
     })
+  }
+
+  const openEditModal = (id: string, content:string) =>{
+    setOpen(true)
+    setInputEdit(content)
+    setSelectedId(id)
+  }
+
+  const saveEditItem = () => {
+    const selectedItem = items.find((item) => item.id === selectedId)
+    if (selectedItem) {
+      selectedItem.content = inputEdit
+      setItems([...items])
+    }
+    setOpen(false)
   }
 
 
@@ -150,11 +186,12 @@ function App() {
                         {...provider.dragHandleProps} 
                         >
                           {content}
-                          <DeleteContainer>
+                          <EditDeleteContainer>
                             <Button onClick={()=>deleteItem(id)}>
                               <FaTrash  />
                             </Button>
-                          </DeleteContainer>
+                            <Button onClick={()=>openEditModal(id, content)}> <FaEdit/></Button>
+                          </EditDeleteContainer>
                         </Listbox>
                     )}
                     </Draggable>
@@ -166,9 +203,20 @@ function App() {
             </DragDropContext>
           </List>
         </ListContainer>
-
       </Container>
-        
+      {open &&(
+        <ModalBackground>
+          <ModalContainer>
+            <Input
+            type='text'
+            value={inputEdit}
+            onChange={(e) => setInputEdit(e.target.value)}
+             />
+             <Button onClick={saveEditItem}>Kaydet</Button>
+          </ModalContainer>
+        </ModalBackground>
+      )}
+   
     </>
   )
 }
